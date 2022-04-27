@@ -121,6 +121,14 @@ public class Zip extends CordovaPlugin {
                 anyEntries = true;
                 String compressedName = ze.getName();
 
+                if (checkForPathTraversal(ze, outputDirectory))
+                {
+                    String errorMessage = "Zip traversal security error";
+                    callbackContext.error(errorMessage);
+                    Log.e(LOG_TAG, errorMessage);
+                    return;
+                }
+
                 if (ze.isDirectory()) {
                    File dir = new File(outputDirectory + compressedName);
                    dir.mkdirs();
@@ -164,6 +172,13 @@ public class Zip extends CordovaPlugin {
                 }
             }
         }
+    }
+
+    private boolean checkForPathTraversal(ZipEntry ze, String outputDirectory) throws IOException
+    {
+        File f = new File(outputDirectory, ze.getName());
+        String canonicalPath = f.getCanonicalPath();
+        return !canonicalPath.startsWith(outputDirectory);
     }
 
     private void updateProgress(CallbackContext callbackContext, ProgressEvent progress) throws JSONException {
